@@ -1,0 +1,10 @@
+target/
+node_modules/
+**/node_modules
+**/.git
+*.log
+.idea/
+dist/
+**/dist
+*.jar
+*.class

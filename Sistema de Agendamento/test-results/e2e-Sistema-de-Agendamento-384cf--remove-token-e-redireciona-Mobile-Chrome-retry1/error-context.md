@@ -1,0 +1,76 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e7]:
+        - link [ref=e9] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e11]
+        - button [ref=e16]:
+          - img
+    - main [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - heading "Bem-vindo de volta, Administrator!" [level=1] [ref=e20]
+          - paragraph [ref=e21]: Aqui está um resumo das suas atividades
+        - generic [ref=e22]:
+          - generic [ref=e25]:
+            - generic [ref=e26]:
+              - paragraph [ref=e27]: Espaços Disponíveis
+              - paragraph [ref=e28]: "2"
+            - img [ref=e30]
+          - generic [ref=e36]:
+            - generic [ref=e37]:
+              - paragraph [ref=e38]: Minhas Reservas
+              - paragraph [ref=e39]: "0"
+            - img [ref=e41]
+          - generic [ref=e45]:
+            - generic [ref=e46]:
+              - paragraph [ref=e47]: Próximas Reservas
+              - paragraph [ref=e48]: "0"
+            - img [ref=e50]
+          - generic [ref=e55]:
+            - generic [ref=e56]:
+              - paragraph [ref=e57]: Taxa de Ocupação
+              - paragraph [ref=e58]: 87%
+            - img [ref=e60]
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - heading "Próximas Reservas Ver todas" [level=4] [ref=e66]:
+              - text: Próximas Reservas
+              - link "Ver todas" [ref=e67] [cursor=pointer]:
+                - /url: /reservations
+                - button "Ver todas" [ref=e68]
+            - generic [ref=e70]:
+              - img [ref=e71]
+              - paragraph [ref=e73]: Você não tem reservas próximas
+              - link "Explorar Espaços" [ref=e74] [cursor=pointer]:
+                - /url: /spaces
+                - button "Explorar Espaços" [ref=e75]
+          - generic [ref=e76]:
+            - heading "Espaços Disponíveis Ver todos" [level=4] [ref=e78]:
+              - text: Espaços Disponíveis
+              - link "Ver todos" [ref=e79] [cursor=pointer]:
+                - /url: /spaces
+                - button "Ver todos" [ref=e80]
+            - generic [ref=e82]:
+              - generic [ref=e83] [cursor=pointer]:
+                - generic [ref=e84]:
+                  - img [ref=e86]
+                  - generic [ref=e90]:
+                    - paragraph [ref=e91]: Sala de Reunião A
+                    - paragraph [ref=e92]: "Capacidade: 10 pessoas"
+                - button [ref=e93]:
+                  - img
+              - generic [ref=e94] [cursor=pointer]:
+                - generic [ref=e95]:
+                  - img [ref=e97]
+                  - generic [ref=e101]:
+                    - paragraph [ref=e102]: Auditório Azul
+                    - paragraph [ref=e103]: "Capacidade: 100 pessoas"
+                - button [ref=e104]:
+                  - img
+  - region "Notifications alt+T"
+```

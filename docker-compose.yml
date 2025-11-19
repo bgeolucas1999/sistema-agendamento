@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: sistema-agendamento-backend:latest
+    container_name: sistema_agendamento_backend
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./Sistema de Agendamento
+      dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_BASE_URL: "http://backend:8080/api"
+    image: sistema-agendamento-frontend:latest
+    container_name: sistema_agendamento_frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+
+networks:
+  default:
+    name: sistema_agendamento_net
