@@ -19,11 +19,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByUserEmail(String userEmail);
 
-    @Query("SELECT r FROM Reservation r WHERE " +
-	   "r.space.id = :spaceId AND " +
-	   "r.status != 'CANCELLED' AND " +
-	   "r.startTime < :endTime AND " +
-	   "r.endTime > :startTime")
+	 @Query("SELECT r FROM Reservation r WHERE " +
+		 "r.space.id = :spaceId AND " +
+		 "r.status <> com.reserves.model.ReservationStatus.CANCELLED AND " +
+		 "r.startTime < :endTime AND " +
+		 "r.endTime > :startTime")
 	/**
 	 * Encontra reservas conflitantes para um espaço:
 	 * Critérios de conflito (JPQL): r.startTime < :endTime AND r.endTime > :startTime
@@ -43,4 +43,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 	    @Param("spaceId") Long spaceId,
 	    @Param("status") ReservationStatus status
     );
+
+	// Busca reservas de um espaço criadas depois de uma data
+	List<Reservation> findBySpaceIdAndCreatedAtAfter(Long spaceId, LocalDateTime dateTime);
 }

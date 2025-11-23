@@ -27,12 +27,20 @@ public class SecurityConfig {
                 .cors()
                 .and()
                 .authorizeRequests()
+                // Public endpoints
                 .antMatchers("/api/auth/**").permitAll()
+                .antMatchers("/api/health").permitAll()
+                .antMatchers("/actuator/**").permitAll()
+                .antMatchers("/h2-console/**").permitAll()
+                // Protected endpoints
                 .antMatchers("/api/spaces/**").authenticated()
                 .antMatchers("/api/reservations/**").authenticated()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+            // allow frames for H2 console
+            http.headers().frameOptions().disable();
 
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 

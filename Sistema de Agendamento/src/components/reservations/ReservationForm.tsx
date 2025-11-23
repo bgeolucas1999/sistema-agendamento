@@ -23,14 +23,32 @@ export default function ReservationForm({ open, onClose, onSubmit, space, loadin
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('10:00');
   const [notes, setNotes] = useState('');
+  const [userName, setUserName] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+  const [userPhone, setUserPhone] = useState('');
 
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      // Load user data from localStorage if available
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          setUserEmail(user.email || '');
+          setUserName(user.name || '');
+        } catch (e) {
+          // Silently fail - use defaults
+        }
+      }
+    } else {
       // Reset form when dialog closes
       setSelectedDate(new Date());
       setStartTime('09:00');
       setEndTime('10:00');
       setNotes('');
+      setUserName('');
+      setUserEmail('');
+      setUserPhone('');
     }
   }, [open]);
 
@@ -57,6 +75,9 @@ export default function ReservationForm({ open, onClose, onSubmit, space, loadin
 
     const reservation: ReservationDTO = {
       spaceId: space.id,
+      userName: userName || 'Usuário',
+      userEmail: userEmail || 'user@example.com',
+      userPhone: userPhone || undefined,
       startTime: startDateTime,
       endTime: endDateTime,
       notes: notes || undefined,
@@ -91,6 +112,43 @@ export default function ReservationForm({ open, onClose, onSubmit, space, loadin
           <DialogTitle>Nova Reserva - {space?.name}</DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="userName">Nome completo</Label>
+              <input
+                id="userName"
+                type="text"
+                placeholder="Seu nome"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="userEmail">Email</Label>
+              <input
+                id="userEmail"
+                type="email"
+                placeholder="seu.email@example.com"
+                value={userEmail}
+                onChange={(e) => setUserEmail(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="userPhone">Telefone (opcional)</Label>
+            <input
+              id="userPhone"
+              type="tel"
+              placeholder="(11) 98765-4321"
+              value={userPhone}
+              onChange={(e) => setUserPhone(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
           <div>
             <Label className="mb-2 block">Selecione a data</Label>
             <Calendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
@@ -177,7 +235,7 @@ export default function ReservationForm({ open, onClose, onSubmit, space, loadin
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!isValidTimeRange() || loading}
+            disabled={!isValidTimeRange() || loading || !userName || !userEmail}
             className="bg-blue-600 hover:bg-blue-700"
           >
             {loading ? 'Confirmando...' : 'Confirmar Reserva'}

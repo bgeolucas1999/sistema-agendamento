@@ -17,6 +17,9 @@ export interface Reservation {
 
 export interface ReservationDTO {
   spaceId: number;
+  userName: string;
+  userEmail: string;
+  userPhone?: string;
   startTime: string;
   endTime: string;
   notes?: string;

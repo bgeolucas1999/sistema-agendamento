@@ -1,0 +1,45 @@
+{
+  "name": "sistema-agendamento-tests",
+  "version": "1.0.0",
+  "description": "Bateria completa de testes Playwright para Sistema de Agendamento",
+  "scripts": {
+    "test": "playwright test",
+    "test:api": "playwright test tests/api-endpoints.spec.ts",
+    "test:auth": "playwright test tests/api-endpoints.spec.ts -g 'Authentication'",
+    "test:spaces": "playwright test tests/api-endpoints.spec.ts -g 'Spaces'",
+    "test:reservations": "playwright test tests/api-endpoints.spec.ts -g 'Reservations'",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report",
+    "test:codegen": "playwright codegen http://localhost:3000",
+    "test:trace": "playwright show-trace",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down -v",
+    "docker:logs": "docker-compose logs -f backend",
+    "docker:health": "curl http://localhost:8080/api/health"
+  },
+  "keywords": [
+    "playwright",
+    "testing",
+    "api",
+    "e2e",
+    "automation"
+  ],
+  "author": "Sistema de Agendamento Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  },
+  "playwright": {
+    "webServer": {
+      "command": "npm run docker:up",
+      "url": "http://localhost:3000",
+      "timeout": 120000
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

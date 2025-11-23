@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Layout } from '../components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { ReservationCalendar } from '../components/ReservationCalendar';
 import Loading from '../components/common/Loading';
 import reservationService, { Reservation } from '../services/reservationService';
 import { formatDateTime, formatCurrency } from '../utils/helpers';
-import { Calendar, Clock, MapPin, X, Plus } from 'lucide-react';
+import { Calendar, Clock, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import {
   AlertDialog,
@@ -20,26 +19,34 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../components/ui/alert-dialog';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '../components/ui/dialog';
 
 export default function ReservationsPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-  const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [cancelLoading, setCancelLoading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>();
-  const [selectedTime, setSelectedTime] = useState<string>();
   const [activeTab, setActiveTab] = useState('upcoming');
 
   useEffect(() => {
     loadReservations();
+  }, []);
+
+  useEffect(() => {
+    // Refresh reservations when activeTab changes (important for showing newly created reservations)
+    if (activeTab === 'upcoming' || activeTab === 'past' || activeTab === 'cancelled') {
+      loadReservations();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    // Refresh reservations when page regains focus (user returns to tab)
+    const handleFocus = () => {
+      loadReservations();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   const loadReservations = async () => {
@@ -109,35 +116,35 @@ export default function ReservationsPage() {
     const canCancel = reservation.status === 'CONFIRMED' && !isPast;
 
     return (
-      <Card className="border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-200 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:scale-[1.02]">
+      <Card className="border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-md transition-shadow">
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex-1 space-y-3">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="mb-1 text-gray-900 dark:text-white">{reservation.spaceName}</h3>
+                  <h3 className="mb-1 text-gray-900 dark:text-white font-semibold">{reservation.spaceName}</h3>
                   {getStatusBadge(reservation.status)}
                 </div>
               </div>
 
               <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center">
-                  <Calendar className="w-4 h-4 mr-2" />
+                  <Calendar className="w-4 h-4 mr-2 text-gray-500" />
                   {formatDateTime(reservation.startTime)}
                 </div>
                 <div className="flex items-center">
-                  <Clock className="w-4 h-4 mr-2" />
+                  <Clock className="w-4 h-4 mr-2 text-gray-500" />
                   até {formatDateTime(reservation.endTime)}
                 </div>
                 <div className="flex items-center">
-                  <span className="mr-2">💰</span>
+                  <span className="mr-2 text-lg">💰</span>
                   {formatCurrency(reservation.totalPrice)}
                 </div>
               </div>
 
               {reservation.notes && (
-                <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg">
-                  <span>Observações: </span>
+                <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-3 rounded">
+                  <span className="font-medium">Observações: </span>
                   {reservation.notes}
                 </div>
               )}
@@ -163,53 +170,35 @@ export default function ReservationsPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-gray-900 dark:text-white">Minhas Reservas</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Gerencie todas as suas reservas em um só lugar
-            </p>
-          </div>
-          <Button 
-            onClick={() => setCalendarDialogOpen(true)}
-            className="transition-all hover:scale-105 shadow-md"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Reserva
-          </Button>
+        <div>
+          <h1 className="text-gray-900 dark:text-white">Minhas Reservas</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            Gerencie todas as suas reservas em um só lugar
+          </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full sm:w-auto grid-cols-3 bg-white/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 backdrop-blur-sm">
-            <TabsTrigger 
-              value="upcoming"
-              className="data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-blue-900/30 transition-all"
-            >
+          <TabsList className="grid w-full sm:w-auto grid-cols-3 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <TabsTrigger value="upcoming">
               <span className="flex items-center gap-2">
                 Próximas
-                <Badge variant="secondary" className="ml-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                <Badge variant="secondary" className="ml-1">
                   {upcomingReservations.length}
                 </Badge>
               </span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="past"
-              className="data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-blue-900/30 transition-all"
-            >
+            <TabsTrigger value="past">
               <span className="flex items-center gap-2">
                 Passadas
-                <Badge variant="secondary" className="ml-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                <Badge variant="secondary" className="ml-1">
                   {pastReservations.length}
                 </Badge>
               </span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="cancelled"
-              className="data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-blue-900/30 transition-all"
-            >
+            <TabsTrigger value="cancelled">
               <span className="flex items-center gap-2">
                 Canceladas
-                <Badge variant="secondary" className="ml-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                <Badge variant="secondary" className="ml-1">
                   {cancelledReservations.length}
                 </Badge>
               </span>
@@ -218,15 +207,12 @@ export default function ReservationsPage() {
 
           <TabsContent value="upcoming" className="space-y-4">
             {upcomingReservations.length === 0 ? (
-              <Card className="border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+              <Card className="border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 <CardContent className="py-12 text-center">
                   <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-                  <p className="text-gray-500 dark:text-gray-400">Você não tem reservas próximas</p>
-                  <Button 
-                    onClick={() => setCalendarDialogOpen(true)} 
-                    className="mt-4"
-                  >
-                    Fazer uma Reserva
+                  <p className="text-gray-500 dark:text-gray-400 mb-4">Você não tem reservas próximas</p>
+                  <Button asChild>
+                    <a href="/espacos">Fazer uma Reserva</a>
                   </Button>
                 </CardContent>
               </Card>
@@ -239,7 +225,7 @@ export default function ReservationsPage() {
 
           <TabsContent value="past" className="space-y-4">
             {pastReservations.length === 0 ? (
-              <Card className="border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+              <Card className="border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 <CardContent className="py-12 text-center">
                   <Clock className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
                   <p className="text-gray-500 dark:text-gray-400">Você não tem reservas passadas</p>
@@ -254,7 +240,7 @@ export default function ReservationsPage() {
 
           <TabsContent value="cancelled" className="space-y-4">
             {cancelledReservations.length === 0 ? (
-              <Card className="border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+              <Card className="border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 <CardContent className="py-12 text-center">
                   <X className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
                   <p className="text-gray-500 dark:text-gray-400">Você não tem reservas canceladas</p>
@@ -268,39 +254,6 @@ export default function ReservationsPage() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Calendar Dialog */}
-      <Dialog open={calendarDialogOpen} onOpenChange={setCalendarDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-gray-900 dark:text-white">
-              Selecionar Data e Horário
-            </DialogTitle>
-          </DialogHeader>
-          <ReservationCalendar
-            selectedDate={selectedDate}
-            selectedTime={selectedTime}
-            onDateSelect={setSelectedDate}
-            onTimeSelect={setSelectedTime}
-          />
-          {selectedDate && selectedTime && (
-            <div className="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <Button
-                variant="outline"
-                onClick={() => setCalendarDialogOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button onClick={() => {
-                toast.success('Reserva criada! (Demo)');
-                setCalendarDialogOpen(false);
-              }}>
-                Confirmar Reserva
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Cancel Dialog */}
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>

@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   backend:
@@ -16,7 +16,7 @@ services:
       context: ./Sistema de Agendamento
       dockerfile: Dockerfile.frontend
       args:
-        VITE_API_BASE_URL: "http://backend:8080/api"
+        VITE_API_BASE_URL: "/api"
     image: sistema-agendamento-frontend:latest
     container_name: sistema_agendamento_frontend
     depends_on:
@@ -25,6 +25,21 @@ services:
       - "3000:80"
     restart: unless-stopped
 
+  postgres:
+    image: postgres:15
+    container_name: sistema_agendamento_postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: sistema_agendamento
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
 networks:
   default:
     name: sistema_agendamento_net
+
+volumes:
+  postgres_data:

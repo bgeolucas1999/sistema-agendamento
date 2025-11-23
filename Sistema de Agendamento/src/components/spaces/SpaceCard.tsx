@@ -27,8 +27,8 @@ export default function SpaceCard({ space, onReserve, onEdit, onDelete, isAdmin 
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow border-blue-100">
-      <div className="aspect-video relative bg-gradient-to-br from-blue-100 to-blue-50 overflow-hidden">
+    <Card className="overflow-hidden hover:shadow-md transition-shadow border-gray-200 dark:border-gray-700">
+      <div className="aspect-video relative bg-gray-100 dark:bg-gray-700 overflow-hidden">
         {space.imageUrl ? (
           <ImageWithFallback
             src={space.imageUrl}
@@ -37,11 +37,11 @@ export default function SpaceCard({ space, onReserve, onEdit, onDelete, isAdmin 
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <MapPin className="w-12 h-12 text-blue-300" />
+            <MapPin className="w-12 h-12 text-gray-300 dark:text-gray-600" />
           </div>
         )}
         <div className="absolute top-3 right-3">
-          <Badge className={space.available ? 'bg-green-500' : 'bg-red-500'}>
+          <Badge className={space.available ? 'bg-green-600' : 'bg-red-600'}>
             {space.available ? 'Disponível' : 'Indisponível'}
           </Badge>
         </div>
@@ -49,24 +49,24 @@ export default function SpaceCard({ space, onReserve, onEdit, onDelete, isAdmin 
       <CardContent className="p-4">
         <div className="space-y-3">
           <div>
-            <h3 className="mb-1">{space.name}</h3>
+            <h3 className="mb-1 font-semibold text-gray-900 dark:text-white">{space.name}</h3>
             <Badge variant="outline" className="text-xs">
               {getSpaceTypeLabel(space.type)}
             </Badge>
           </div>
-          <p className="text-sm text-gray-600 line-clamp-2">{space.description}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{space.description}</p>
           <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center text-gray-600">
+            <div className="flex items-center text-gray-600 dark:text-gray-400">
               <Users className="w-4 h-4 mr-1" />
               {space.capacity} pessoas
             </div>
-            <div className="flex items-center text-blue-600">
+            <div className="flex items-center text-blue-600 dark:text-blue-400 font-medium">
               <DollarSign className="w-4 h-4" />
-              <span>{formatCurrency(space.pricePerHour)}/hora</span>
+              <span>{formatCurrency(space.pricePerHour)}/h</span>
             </div>
           </div>
           {space.location && (
-            <div className="flex items-center text-sm text-gray-500">
+            <div className="flex items-center text-sm text-gray-500 dark:text-gray-500">
               <MapPin className="w-4 h-4 mr-1" />
               {space.location}
             </div>

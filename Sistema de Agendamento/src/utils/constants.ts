@@ -1,5 +1,7 @@
 // API Configuration
-export const API_BASE_URL = 'http://localhost:8080/api';
+// Use environment variable if available, otherwise default to localhost
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+export const API_BASE_URL = baseURL;
 
 // API Endpoints
 export const API_ENDPOINTS = {

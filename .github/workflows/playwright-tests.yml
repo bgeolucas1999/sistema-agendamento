@@ -1,0 +1,289 @@
+name: Playwright API Tests
+
+on:
+  push:
+    branches: [ main, develop, master ]
+  pull_request:
+    branches: [ main, develop, master ]
+  schedule:
+    # Executar testes diariamente às 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    # Permite execução manual
+
+env:
+  NODE_VERSION: '18'
+  REGISTRY: ghcr.io
+
+jobs:
+  setup-and-test:
+    name: Setup Services & Run Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: admin123
+          POSTGRES_DB: sistema_agendamento
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'Sistema de Agendamento/package-lock.json'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build Backend
+        run: |
+          mvn clean package -DskipTests -q
+        working-directory: .
+
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready -h localhost -p 5432 -U admin; do
+            echo 'Waiting for PostgreSQL...'
+            sleep 2
+          done
+        env:
+          PGPASSWORD: admin123
+
+      - name: Load Mock Data
+        run: |
+          psql -h localhost -U admin -d sistema_agendamento -f populate_mock_data.sql
+        env:
+          PGPASSWORD: admin123
+
+      - name: Start Backend Service
+        run: |
+          java -jar target/sistema-agendamento-0.0.1-SNAPSHOT.jar &
+          echo "Backend started, waiting for health check..."
+          
+          # Wait for backend to be ready
+          for i in {1..60}; do
+            if curl -s http://localhost:8080/api/health > /dev/null 2>&1; then
+              echo "✓ Backend is ready!"
+              exit 0
+            fi
+            echo "Attempt $i/60 - Waiting for backend..."
+            sleep 2
+          done
+          
+          echo "✗ Backend failed to start"
+          exit 1
+
+      - name: Install Frontend Dependencies
+        working-directory: 'Sistema de Agendamento'
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Start Frontend Service
+        working-directory: 'Sistema de Agendamento'
+        run: |
+          npm run build
+          npx http-server dist -p 3000 -c-1 &
+          
+          # Wait for frontend to be ready
+          for i in {1..30}; do
+            if curl -s http://localhost:3000 > /dev/null 2>&1; then
+              echo "✓ Frontend is ready!"
+              exit 0
+            fi
+            echo "Attempt $i/30 - Waiting for frontend..."
+            sleep 1
+          done
+          
+          echo "✗ Frontend failed to start"
+          exit 1
+
+      - name: Run Playwright Tests
+        working-directory: 'Sistema de Agendamento'
+        run: |
+          echo "Starting Playwright test suite..."
+          npx playwright test tests/api-endpoints.spec.ts --reporter=html,json,junit
+        env:
+          CI: true
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: results.xml
+
+      - name: Upload Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: 'Sistema de Agendamento/playwright-report/'
+          retention-days: 30
+
+      - name: Upload Test Results (XML)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-xml
+          path: 'Sistema de Agendamento/test-results/*.xml'
+          retention-days: 30
+
+      - name: Publish Test Results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: 'Sistema de Agendamento/test-results/**/*.xml'
+          check_name: 'Playwright Test Results'
+
+      - name: Comment PR with Test Summary
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            try {
+              const resultsPath = 'Sistema de Agendamento/test-results/results.json';
+              if (fs.existsSync(resultsPath)) {
+                const results = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+                const passed = results.stats.expected;
+                const failed = results.stats.unexpected;
+                const duration = Math.round(results.stats.duration / 1000);
+                
+                const comment = `## 🧪 Playwright Test Results
+                
+                | Metric | Value |
+                |--------|-------|
+                | ✅ Passed | ${passed} |
+                | ❌ Failed | ${failed} |
+                | ⏱️ Duration | ${duration}s |
+                
+                [📊 View Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+                `;
+                
+                github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: comment
+                });
+              }
+            } catch (error) {
+              console.log('Could not comment on PR:', error);
+            }
+
+      - name: Check Test Status
+        if: failure()
+        run: |
+          echo "❌ Some tests failed!"
+          echo ""
+          echo "Review the test report above for details."
+          exit 1
+
+  docker-test:
+    name: Docker Compose Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start Services with Docker Compose
+        run: |
+          docker-compose up -d
+          echo "Waiting for services..."
+          sleep 15
+
+      - name: Check Backend Health
+        run: |
+          curl -s http://localhost:8080/api/health | grep -q '"status":"ok"' && echo "✓ Backend is healthy" || (echo "✗ Backend health check failed" && exit 1)
+
+      - name: Check Database
+        run: |
+          docker exec sistema_agendamento_postgres psql -U admin -d sistema_agendamento -c "SELECT COUNT(*) FROM spaces;" | grep -q "[0-9]" && echo "✓ Database is accessible" || (echo "✗ Database check failed" && exit 1)
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install & Run Tests
+        working-directory: 'Sistema de Agendamento'
+        run: |
+          npm ci
+          npx playwright install
+          npx playwright test tests/api-endpoints.spec.ts
+
+      - name: Upload Docker Logs
+        if: always()
+        run: |
+          docker-compose logs > docker-logs.txt
+          
+      - name: Upload Logs as Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-logs
+          path: docker-logs.txt
+
+      - name: Cleanup
+        if: always()
+        run: docker-compose down -v
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: npm audit
+        working-directory: 'Sistema de Agendamento'
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Dependency check
+        working-directory: 'Sistema de Agendamento'
+        run: npm ls --all 2>&1 | tail -20
+
+  summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [setup-and-test, docker-test, security-scan]
+    if: always()
+    
+    steps:
+      - name: All Tests Passed ✓
+        if: ${{ needs.setup-and-test.result == 'success' && needs.docker-test.result == 'success' }}
+        run: |
+          echo "✓ All test suites passed successfully!"
+          exit 0
+
+      - name: Some Tests Failed ✗
+        if: ${{ needs.setup-and-test.result != 'success' || needs.docker-test.result != 'success' }}
+        run: |
+          echo "✗ Some test suites failed. Please review the logs above."
+          exit 1
