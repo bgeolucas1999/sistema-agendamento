@@ -1,6 +1,5 @@
 package com.reserves.controller;
 
-import com.reserves.dto.JwtResponse;
 import com.reserves.dto.LoginRequest;
 import com.reserves.dto.RegisterRequest;
 import com.reserves.model.Role;
@@ -78,6 +77,28 @@ public class AuthController {
 
         userRepository.save(u);
 
-        return ResponseEntity.ok("User registered");
+        // Auto-login after registration - authenticate and return JWT
+        try {
+            Authentication auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
+
+            var userDetails = auth.getPrincipal();
+            String token = jwtUtil.generateToken((org.springframework.security.core.userdetails.UserDetails) userDetails);
+
+            var roles = u.getRoles().stream().map(Enum::name).collect(Collectors.toList());
+
+            java.util.Map<String, Object> body = new java.util.HashMap<>();
+            body.put("token", token);
+            body.put("type", "Bearer");
+            body.put("id", u.getId());
+            body.put("email", u.getEmail());
+            body.put("name", u.getName());
+            body.put("roles", roles);
+
+            return ResponseEntity.ok(body);
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body("User registered but failed to generate token");
+        }
     }
 }

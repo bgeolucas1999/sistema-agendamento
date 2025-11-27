@@ -30,10 +30,12 @@ public class SecurityConfig {
                 // Public endpoints
                 .antMatchers("/api/auth/**").permitAll()
                 .antMatchers("/api/health").permitAll()
+                .antMatchers("/api/spaces").permitAll()  // Listar espaços é público
+                .antMatchers("/api/spaces/available").permitAll()  // Buscar espaços disponíveis é público
                 .antMatchers("/actuator/**").permitAll()
                 .antMatchers("/h2-console/**").permitAll()
                 // Protected endpoints
-                .antMatchers("/api/spaces/**").authenticated()
+                .antMatchers("/api/spaces/**").authenticated()  // Criar/editar/deletar espaços requer autenticação
                 .antMatchers("/api/reservations/**").authenticated()
                 .anyRequest().authenticated()
                 .and()

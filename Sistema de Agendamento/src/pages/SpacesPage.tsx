@@ -26,8 +26,10 @@ export default function SpacesPage() {
       const data = await spaceService.getAllSpaces();
       setSpaces(data);
       setFilteredSpaces(data);
-    } catch (error) {
-      toast.error('Erro ao carregar espaços');
+    } catch (error: any) {
+      console.error('Error loading spaces:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Erro ao carregar espaços';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -71,12 +73,17 @@ export default function SpacesPage() {
   const handleReservationSubmit = async (reservation: ReservationDTO) => {
     setReservationLoading(true);
     try {
-      await reservationService.createReservation(reservation);
+      const created = await reservationService.createReservation(reservation);
       toast.success('Reserva criada com sucesso!');
       setReservationModalOpen(false);
       loadSpaces(); // Reload to update availability
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Erro ao criar reserva');
+      console.error('Error creating reservation:', error);
+      const errorMessage = error?.response?.data?.message || 
+                          error?.response?.data || 
+                          error?.message || 
+                          'Erro ao criar reserva';
+      toast.error(errorMessage);
     } finally {
       setReservationLoading(false);
     }

@@ -15,6 +15,7 @@ C:\workspace\sistema-agendamento\src\main\java\com\reserves\ReservesApplication.
 C:\workspace\sistema-agendamento\src\main\java\com\reserves\repository\UserRepository.java
 C:\workspace\sistema-agendamento\src\main\java\com\reserves\security\JwtRequestFilter.java
 C:\workspace\sistema-agendamento\src\main\java\com\reserves\security\JwtUtil.java
+C:\workspace\sistema-agendamento\src\main\java\com\reserves\config\CharacterEncodingConfig.java
 C:\workspace\sistema-agendamento\src\main\java\com\reserves\model\Role.java
 C:\workspace\sistema-agendamento\src\main\java\com\reserves\service\SpaceService.java
 C:\workspace\sistema-agendamento\src\main\java\com\reserves\dto\LoginRequest.java
@@ -23,6 +24,7 @@ C:\workspace\sistema-agendamento\src\main\java\com\reserves\repository\Reservati
 C:\workspace\sistema-agendamento\src\main\java\com\reserves\service\ReservationService.java
 C:\workspace\sistema-agendamento\src\main\java\com\reserves\config\CorsConfig.java
 C:\workspace\sistema-agendamento\src\main\java\com\reserves\exception\RestExceptionHandler.java
+C:\workspace\sistema-agendamento\src\main\java\com\reserves\converter\SpaceTypeConverter.java
 C:\workspace\sistema-agendamento\src\main\java\com\reserves\exception\ResourceNotFoundException.java
 C:\workspace\sistema-agendamento\src\main\java\com\reserves\model\Space.java
 C:\workspace\sistema-agendamento\src\main\java\com\reserves\dto\JwtResponse.java

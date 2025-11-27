@@ -34,5 +34,7 @@ com\reserves\model\ReservationStatus.class
 com\reserves\service\SpaceService.class
 com\reserves\dto\ReservationCreateRequest.class
 com\reserves\config\AdminDataInitializer.class
+com\reserves\converter\SpaceTypeConverter.class
+com\reserves\config\CharacterEncodingConfig.class
 com\reserves\exception\RestExceptionHandler.class
 com\reserves\repository\UserRepository.class

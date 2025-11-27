@@ -9,6 +9,7 @@ import Calendar from './Calendar';
 import { format } from 'date-fns';
 import { Clock } from 'lucide-react';
 import { formatCurrency } from '../../utils/helpers';
+import { useAuth } from '../../hooks/useAuth';
 
 interface ReservationFormProps {
   open: boolean;
@@ -19,6 +20,7 @@ interface ReservationFormProps {
 }
 
 export default function ReservationForm({ open, onClose, onSubmit, space, loading }: ReservationFormProps) {
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('10:00');
@@ -29,15 +31,21 @@ export default function ReservationForm({ open, onClose, onSubmit, space, loadin
 
   useEffect(() => {
     if (open) {
-      // Load user data from localStorage if available
-      const userData = localStorage.getItem('userData');
-      if (userData) {
-        try {
-          const user = JSON.parse(userData);
-          setUserEmail(user.email || '');
-          setUserName(user.name || '');
-        } catch (e) {
-          // Silently fail - use defaults
+      // Load user data from auth context or localStorage
+      if (user) {
+        setUserEmail(user.email || '');
+        setUserName(user.name || '');
+      } else {
+        // Fallback to localStorage if auth context not available
+        const userData = localStorage.getItem('userData');
+        if (userData) {
+          try {
+            const storedUser = JSON.parse(userData);
+            setUserEmail(storedUser.email || '');
+            setUserName(storedUser.name || '');
+          } catch (e) {
+            // Silently fail - use defaults
+          }
         }
       }
     } else {
@@ -50,7 +58,7 @@ export default function ReservationForm({ open, onClose, onSubmit, space, loadin
       setUserEmail('');
       setUserPhone('');
     }
-  }, [open]);
+  }, [open, user]);
 
   const calculateDuration = () => {
     const [startHour, startMinute] = startTime.split(':').map(Number);
@@ -69,14 +77,18 @@ export default function ReservationForm({ open, onClose, onSubmit, space, loadin
   const handleSubmit = () => {
     if (!space) return;
 
+    if (!userName || !userEmail) {
+      return; // Form validation will prevent submission
+    }
+
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
     const startDateTime = `${dateStr}T${startTime}:00`;
     const endDateTime = `${dateStr}T${endTime}:00`;
 
     const reservation: ReservationDTO = {
       spaceId: space.id,
-      userName: userName || 'Usuário',
-      userEmail: userEmail || 'user@example.com',
+      userName: userName,
+      userEmail: userEmail,
       userPhone: userPhone || undefined,
       startTime: startDateTime,
       endTime: endDateTime,

@@ -62,6 +62,9 @@ public class SpaceController {
 
     // --- Mapping helpers ---
     private SpaceDTO toDTO(Space s) {
+        if (s == null) {
+            return null;
+        }
         SpaceDTO dto = new SpaceDTO();
         dto.setId(s.getId());
         dto.setName(s.getName());
@@ -69,7 +72,7 @@ public class SpaceController {
         dto.setType(s.getType() != null ? s.getType().name() : null);
         dto.setCapacity(s.getCapacity());
         dto.setPricePerHour(s.getPricePerHour());
-        dto.setAmenities(s.getAmenities());
+        dto.setAmenities(s.getAmenities() != null ? s.getAmenities() : new java.util.ArrayList<>());
         dto.setImageUrl(s.getImageUrl());
         dto.setAvailable(s.getAvailable());
         dto.setFloor(s.getFloor());

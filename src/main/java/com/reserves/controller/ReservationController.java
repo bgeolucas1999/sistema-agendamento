@@ -6,10 +6,13 @@ import com.reserves.dto.ReservationDTO;
 import com.reserves.dto.ReservationCreateRequest;
 import com.reserves.dto.ReservationUpdateRequest;
 import com.reserves.repository.UserRepository;
+import com.reserves.repository.SpaceRepository;
 import com.reserves.model.User;
+import com.reserves.model.Space;
 import javax.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,10 +24,12 @@ public class ReservationController {
 
     private final ReservationService service;
     private final UserRepository userRepository;
+    private final SpaceRepository spaceRepository;
 
-    public ReservationController(ReservationService service, UserRepository userRepository) {
+    public ReservationController(ReservationService service, UserRepository userRepository, SpaceRepository spaceRepository) {
         this.service = service;
         this.userRepository = userRepository;
+        this.spaceRepository = spaceRepository;
     }
 
     @GetMapping
@@ -55,11 +60,19 @@ public class ReservationController {
 
     @PostMapping
     public ReservationDTO createReservation(@Valid @RequestBody ReservationCreateRequest request) {
+        // Validate spaceId is not null (should be caught by @Valid, but adding explicit check for safety)
+        Long spaceId = request.getSpaceId();
+        if (spaceId == null) {
+            throw new com.reserves.exception.BadRequestException("ID do espaço é obrigatório");
+        }
+        
+        // Fetch the space entity properly instead of creating a new one
+        Space space = spaceRepository.findById(spaceId)
+                .orElseThrow(() -> new com.reserves.exception.ResourceNotFoundException("Espaço não encontrado: " + spaceId));
+        
         // Build Reservation entity from request
         Reservation r = new Reservation();
-        com.reserves.model.Space sp = new com.reserves.model.Space();
-        sp.setId(request.getSpaceId());
-        r.setSpace(sp);
+        r.setSpace(space);
 
         // If authenticated, prefer authenticated user's email
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -85,11 +98,16 @@ public class ReservationController {
 
     @PostMapping("/{id}/cancel")
     public ReservationDTO cancelReservation(@PathVariable Long id) {
+        Reservation existing = service.findById(id);
+        checkAuthorization(existing);
         return toDTO(service.cancel(id));
     }
 
     @PutMapping("/{id}")
     public ReservationDTO updateReservation(@PathVariable Long id, @Valid @RequestBody ReservationUpdateRequest request) {
+        Reservation existing = service.findById(id);
+        checkAuthorization(existing);
+        
         Reservation r = new Reservation();
         r.setUserName(request.getUserName());
         r.setUserEmail(request.getUserEmail());
@@ -108,6 +126,25 @@ public class ReservationController {
         service.delete(id);
     }
 
+    /**
+     * Checks if the current user is authorized to modify the reservation.
+     * Users can only modify their own reservations, unless they are admins.
+     */
+    private void checkAuthorization(Reservation reservation) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            throw new AccessDeniedException("Autenticação necessária");
+        }
+        
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isOwner = reservation.getUserEmail().equals(auth.getName());
+        
+        if (!isAdmin && !isOwner) {
+            throw new AccessDeniedException("Você não tem permissão para modificar esta reserva");
+        }
+    }
+
     private ReservationDTO toDTO(Reservation r) {
         ReservationDTO dto = new ReservationDTO();
         dto.setId(r.getId());
@@ -115,6 +152,7 @@ public class ReservationController {
         dto.setSpaceName(r.getSpace() != null ? r.getSpace().getName() : null);
         dto.setUserName(r.getUserName());
         dto.setUserEmail(r.getUserEmail());
+        dto.setUserPhone(r.getUserPhone());
         dto.setStartTime(r.getStartTime());
         dto.setEndTime(r.getEndTime());
         dto.setStatus(r.getStatus() != null ? r.getStatus().name() : null);

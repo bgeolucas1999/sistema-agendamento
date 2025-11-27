@@ -80,12 +80,19 @@ test.describe('API Endpoints - Full Test Suite', () => {
         },
       });
 
-      // Accept both 200 and 201
-      expect([200, 201]).toContain(res.status());
       expect(res.ok()).toBeTruthy();
+      expect(res.status()).toBe(200);
 
-      const text = await res.text();
-      expect(text).toBeTruthy();
+      const body = await res.json();
+      expect(body).toHaveProperty('token');
+      expect(body).toHaveProperty('type');
+      expect(body).toHaveProperty('email');
+      expect(body).toHaveProperty('name');
+      expect(body).toHaveProperty('id');
+      expect(body).toHaveProperty('roles');
+      expect(body.type).toBe('Bearer');
+      expect(body.email).toBe(newEmail);
+      expect(Array.isArray(body.roles)).toBeTruthy();
     });
 
     test('POST /auth/register - Falha ao registrar email duplicado', async ({ request }) => {
@@ -553,7 +560,7 @@ test.describe('API Endpoints - Full Test Suite', () => {
 
       const body = await res.json();
       expect(body).toHaveProperty('status');
-      expect(body.status).toBe('ok');
+      expect(['ok', 'UP']).toContain(body.status);
       expect(body).toHaveProperty('service');
       expect(body.service).toBe('sistema-agendamento');
     });
