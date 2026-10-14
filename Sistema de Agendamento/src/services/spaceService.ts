@@ -114,50 +114,17 @@ class SpaceService {
   ];
 
   async getAllSpaces(): Promise<Space[]> {
-    try {
-      return await api.get<Space[]>(API_ENDPOINTS.SPACES.BASE);
-    } catch (error) {
-      // Return mock data if backend is not available
-      console.log('Using mock spaces data');
-      return this.mockSpaces;
-    }
+    return await api.get<Space[]>(API_ENDPOINTS.SPACES.BASE);
   }
 
   async getSpaceById(id: number): Promise<Space> {
-    try {
-      return await api.get<Space>(API_ENDPOINTS.SPACES.BY_ID(id));
-    } catch (error) {
-      // Return mock data if backend is not available
-      const space = this.mockSpaces.find(s => s.id === id);
-      if (!space) {
-        throw new Error('Space not found');
-      }
-      return space;
-    }
+    return await api.get<Space>(API_ENDPOINTS.SPACES.BY_ID(id));
   }
 
   async getAvailableSpaces(filter?: SpaceFilter): Promise<Space[]> {
-    try {
-      return await api.get<Space[]>(API_ENDPOINTS.SPACES.AVAILABLE, {
-        params: filter,
-      });
-    } catch (error) {
-      // Return mock data if backend is not available
-      console.log('Using mock spaces data');
-      let filtered = this.mockSpaces.filter(s => s.available);
-      
-      if (filter?.type) {
-        filtered = filtered.filter(s => s.type === filter.type);
-      }
-      if (filter?.minCapacity) {
-        filtered = filtered.filter(s => s.capacity >= filter.minCapacity);
-      }
-      if (filter?.maxPrice) {
-        filtered = filtered.filter(s => s.pricePerHour <= filter.maxPrice);
-      }
-      
-      return filtered;
-    }
+    return await api.get<Space[]>(API_ENDPOINTS.SPACES.AVAILABLE, {
+      params: filter,
+    });
   }
 
   async createSpace(spaceData: SpaceDTO): Promise<Space> {

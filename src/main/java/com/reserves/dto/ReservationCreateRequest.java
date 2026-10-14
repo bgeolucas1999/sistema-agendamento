@@ -1,14 +1,28 @@
 package com.reserves.dto;
 
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.time.LocalDateTime;
 
 public class ReservationCreateRequest {
+    @NotNull(message = "ID do espaço é obrigatório")
     private Long spaceId;
+    
     private String userName;
+    
+    @Email(message = "Email inválido")
     private String userEmail;
+    
+    @Pattern(regexp = "^[\\d\\s\\+\\-\\(\\)]+$", message = "Telefone inválido")
     private String userPhone;
+    
+    @NotNull(message = "Horário de início é obrigatório")
     private LocalDateTime startTime;
+    
+    @NotNull(message = "Horário de término é obrigatório")
     private LocalDateTime endTime;
+    
     private String notes;
 
     public ReservationCreateRequest() {}

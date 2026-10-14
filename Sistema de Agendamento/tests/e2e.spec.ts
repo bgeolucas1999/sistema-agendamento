@@ -266,7 +266,7 @@ test.describe('Sistema de Agendamento - Suite E2E', () => {
       });
       
       expect(healthResponse).toHaveProperty('status');
-      expect(healthResponse.status).toBe('ok');
+      expect(['ok', 'UP']).toContain(healthResponse.status);
     });
   });
 

@@ -1,16 +1,30 @@
 package com.reserves.dto;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class SpaceDTO {
     private Long id;
+    
+    @NotBlank(message = "Nome do espaço é obrigatório")
     private String name;
+    
     private String description;
+    
     private String type;
+    
+    @Min(value = 1, message = "Capacidade deve ser pelo menos 1")
     private Integer capacity;
+    
+    @NotNull(message = "Preço por hora é obrigatório")
+    @Positive(message = "Preço por hora deve ser maior que zero")
     private BigDecimal pricePerHour;
+    
     private List<String> amenities;
     private String imageUrl;
     private Boolean available;

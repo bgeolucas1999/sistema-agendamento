@@ -7,9 +7,9 @@ public class ReservationDTO {
     private Long id;
     private Long spaceId;
     private String spaceName;
-    private Long userId;
     private String userName;
     private String userEmail;
+    private String userPhone;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String status;
@@ -26,12 +26,12 @@ public class ReservationDTO {
     public void setSpaceId(Long spaceId) { this.spaceId = spaceId; }
     public String getSpaceName() { return spaceName; }
     public void setSpaceName(String spaceName) { this.spaceName = spaceName; }
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
     public String getUserName() { return userName; }
     public void setUserName(String userName) { this.userName = userName; }
     public String getUserEmail() { return userEmail; }
     public void setUserEmail(String userEmail) { this.userEmail = userEmail; }
+    public String getUserPhone() { return userPhone; }
+    public void setUserPhone(String userPhone) { this.userPhone = userPhone; }
     public LocalDateTime getStartTime() { return startTime; }
     public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
     public LocalDateTime getEndTime() { return endTime; }

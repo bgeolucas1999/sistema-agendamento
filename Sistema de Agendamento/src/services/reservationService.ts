@@ -4,15 +4,16 @@ import { API_ENDPOINTS } from '../utils/constants';
 export interface Reservation {
   id: number;
   spaceId: number;
-  spaceName: string;
-  userId: number;
+  spaceName?: string;
   userName: string;
+  userEmail?: string;
+  userPhone?: string;
   startTime: string;
   endTime: string;
   status: string;
   totalPrice: number;
   notes?: string;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface ReservationDTO {

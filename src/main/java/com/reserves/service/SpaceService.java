@@ -4,7 +4,9 @@ import com.reserves.exception.BadRequestException;
 import com.reserves.exception.ResourceNotFoundException;
 import com.reserves.model.Space;
 import com.reserves.model.SpaceType;
+import com.reserves.model.ReservationStatus;
 import com.reserves.repository.SpaceRepository;
+import com.reserves.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,9 +23,11 @@ import java.util.List;
 public class SpaceService {
 
     private final SpaceRepository spaceRepository;
+    private final ReservationRepository reservationRepository;
 
-    public SpaceService(SpaceRepository spaceRepository) {
+    public SpaceService(SpaceRepository spaceRepository, ReservationRepository reservationRepository) {
         this.spaceRepository = spaceRepository;
+        this.reservationRepository = reservationRepository;
     }
 
     public List<Space> findAll() {
@@ -73,6 +77,17 @@ public class SpaceService {
     @Transactional
     public void delete(Long id) {
         Space existing = findById(id);
+        
+        // Check for active reservations (not cancelled)
+        long activeReservations = reservationRepository.findBySpaceId(id).stream()
+                .filter(r -> r.getStatus() != ReservationStatus.CANCELLED)
+                .count();
+        
+        if (activeReservations > 0) {
+            throw new BadRequestException("Não é possível excluir um espaço que possui reservas ativas. " +
+                    "Existem " + activeReservations + " reserva(s) ativa(s) para este espaço.");
+        }
+        
         spaceRepository.delete(existing);
     }
 }

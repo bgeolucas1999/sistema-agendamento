@@ -1,6 +1,7 @@
 package com.reserves.model;
 
 import javax.persistence.*;
+import javax.persistence.Convert;
 import javax.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -39,8 +40,9 @@ public class Space {
     private String description;
 
     // Tipo do espaço (enum) — armazenado como STRING
+    // Usa SpaceTypeConverter para lidar com valores inválidos do banco
     @NotNull(message = "Tipo é obrigatório")
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = com.reserves.converter.SpaceTypeConverter.class)
     @Column(nullable = false)
     private SpaceType type;
 
@@ -57,7 +59,7 @@ public class Space {
     private BigDecimal pricePerHour;
 
     // Lista de comodidades (element collection armazena em tabela separada)
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "space_amenities", joinColumns = @JoinColumn(name = "space_id"))
     @Column(name = "amenity")
     private List<String> amenities = new ArrayList<>();
